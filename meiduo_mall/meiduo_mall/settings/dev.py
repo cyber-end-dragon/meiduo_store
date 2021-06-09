@@ -54,9 +54,22 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'meiduo_mall.urls'
 
 TEMPLATES = [
+    # {
+    #     'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    #     'DIRS': [],
+    #     'APP_DIRS': True,
+    #     'OPTIONS': {
+    #         'context_processors': [
+    #             'django.template.context_processors.debug',
+    #             'django.template.context_processors.request',
+    #             'django.contrib.auth.context_processors.auth',
+    #             'django.contrib.messages.context_processors.messages',
+    #         ],
+    #     },
+    # },
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'BACKEND': 'django.template.backends.jinja2.jinja2',  # configure jinja2 engine
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # add template path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,6 +78,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            # add environment path
+            'environment': 'meiduo_mall.utils.jinja2_env.jinja2_environment'
         },
     },
 ]
