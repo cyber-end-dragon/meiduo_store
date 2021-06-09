@@ -1,3 +1,5 @@
+# configure the software development environment
+
 """
 Django settings for meiduo_mall project.
 
