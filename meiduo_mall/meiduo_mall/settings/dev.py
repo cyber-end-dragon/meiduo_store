@@ -13,10 +13,11 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -56,7 +58,7 @@ ROOT_URLCONF = 'meiduo_mall.urls'
 TEMPLATES = [
     # {
     #     'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    #     'DIRS': [],
+    #     'DIRS': [os.path.join(BASE_DIR, 'templates')],
     #     'APP_DIRS': True,
     #     'OPTIONS': {
     #         'context_processors': [
@@ -68,7 +70,7 @@ TEMPLATES = [
     #     },
     # },
     {
-        'BACKEND': 'django.template.backends.jinja2.jinja2',  # configure jinja2 engine
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',  # configure jinja2 engine
         'DIRS': [os.path.join(BASE_DIR, 'templates')],  # add template path
         'APP_DIRS': True,
         'OPTIONS': {
@@ -79,7 +81,20 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
             # add environment path
-            'environment': 'meiduo_mall.utils.jinja2_env.jinja2_environment'
+            'environment': 'meiduo_mall.utils.jinja2_env.jinja2_environment',
+        },
+    },
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
         },
     },
 ]
