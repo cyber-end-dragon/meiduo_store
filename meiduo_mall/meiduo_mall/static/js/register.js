@@ -23,26 +23,31 @@
     },
     methods: {
         check_username() {
-//                console.log(222)
-//                this.error_name_message = 'nice'
-//                this.error_name = true
-//               if (this.username != '530'){
-//                this.error_name_message = '530';
-//                this.error_name = true;
-//               }
-//            let re = /^[a-zA-Z0-9_-]{5,20}$/;
-//            if (re.test(this.username)){
-//                this.error_name = false;
-//            }else{
-//                this.error_name_message = '530';
-//                this.error_name = true;
-//            }
         let re = /^[a-zA-Z0-9_-]{5,20}$/;
         if (re.test(this.username)) {
             this.error_name = false;
         } else {
             this.error_name_message = '请输入5-20个字符的用户名';
             this.error_name = true;
+        }
+        // 判断用户是否重复注册
+
+        if (this.error_name == false){
+            let url = '/usernames/' + this.username + '/count/';
+            axios.get(url,{
+                responseType: 'json'
+            })
+                .then(response => {
+                    if (response.data.count == 1){
+                        this.error_name_message = '用户名已存在';
+                        this.error_name = true;
+                    } else{
+                        this.error_name = false;
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response);
+                })
         }
     },
 

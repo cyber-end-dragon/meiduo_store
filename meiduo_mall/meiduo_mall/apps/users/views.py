@@ -6,9 +6,19 @@ from django.views import View
 from django import http
 
 from users.models import User
+from meiduo_mall.utils.response_code import RETCODE
 from django.db import DatabaseError
 from django.contrib.auth import login
 # Create your views here.
+
+
+class UsernameCountView(View):
+
+    def get(self, request, username):
+
+        count = User.objects.filter(username=username).count()
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'count': count})
+
 
 
 class RegisterView(View):
