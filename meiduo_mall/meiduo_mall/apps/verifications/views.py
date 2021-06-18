@@ -4,6 +4,7 @@ from django import http
 from django_redis import get_redis_connection
 import random, logging
 
+from celery_tasks.sms.tasks import send_sms_code
 from verifications.libs.captcha.captcha import captcha
 from verifications.libs.python_sms_sdk import SendMessage
 from meiduo_mall.utils.response_code import RETCODE
@@ -53,13 +54,17 @@ class SMSCodeView(View):
         # 输出日志, 记录验证码
         logger.info(sms_code)
 
+        # 创建redis管道
+        pl = redis_conn.pipeline()
         # 保存短信验证码
-        redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
-        redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        pl.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        pl.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        pl.execute()
 
-        # 发送短信验证码
-        message_data = (sms_code, constants.SMS_CODE_REDIS_EXPIRES//60)
-        SendMessage.CCP().send_sms(constants.SEND_SMS_TEMPLATE_ID, mobile, message_data)
+        # celery发送短信验证码
+        send_sms_code.delay(mobile, sms_code)
+        # message_data = (sms_code, constants.SMS_CODE_REDIS_EXPIRES//60)
+        # SendMessage.CCP().send_sms(constants.SEND_SMS_TEMPLATE_ID, mobile, message_data)
 
         return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '发送短信成功'})
 
