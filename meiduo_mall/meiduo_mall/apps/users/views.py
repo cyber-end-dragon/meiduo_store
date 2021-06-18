@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 from django import http
+from django_redis import get_redis_connection
 
 from users.models import User
 from meiduo_mall.utils.response_code import RETCODE
@@ -29,12 +30,15 @@ class RegisterView(View):
 
     def post(self,request):
 
+        # 接收参数
         username = request.POST.get('username')
         password = request.POST.get('password')
         password2 = request.POST.get('password2')
         mobile = request.POST.get('mobile')
+        sms_code_client = request.POST.get('sms_code')
         allow = request.POST.get('allow')
 
+        # 校验参数
         if not all([username,password,password2,mobile,allow]):
             return http.HttpResponseForbidden('缺少参数 Missing Parameter')
         if not re.match(r'^[a-zA-Z0-9_-]{5,20}$', username):
@@ -48,13 +52,20 @@ class RegisterView(View):
         if allow != 'on':
             return http.HttpResponseForbidden('请勾选用户协议')
 
+        redis_conn = get_redis_connection('verify_code')
+        sms_code_server = redis_conn.get('sms_%s' % mobile)
+        if sms_code_server is None:
+            return render(request, 'register.html', {'sms_code_errmsg': '短信验证码失效'})
+        if sms_code_client != sms_code_server.decode():
+            return render(request, 'register.html', {'sms_code_errmsg': '输入短信验证码有误'})
+
         # return render(request, 'register.html', {'register_errmsg': '注册失败'})
 
+        # 保存数据,实现状态保持
         try:
             user = User.objects.create_user(username=username, password=password, mobile=mobile)
         except DatabaseError:
             return render(request, 'register.html', {'register_errmsg':'注册失败'})
-
         login(request,user)
 
         # return http.HttpResponse('注册成功')
