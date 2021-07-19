@@ -40,9 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
-    'contents',
-    'verifications',
+    'users', # 用户模块
+    'contents', # 首页广告
+    'verifications', # 验证码
+    'areas' # 省市区三级联动
 ]
 
 MIDDLEWARE = [

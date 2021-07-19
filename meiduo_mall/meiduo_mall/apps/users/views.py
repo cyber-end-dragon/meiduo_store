@@ -20,6 +20,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 logger = logging.getLogger('django')
 
 
+class AddressView(LoginRequiredMixin, View):
+    # 用户收货地址
+    def get(self, request):
+        return render(request, 'user_center_site.html')
+
 class VerifyEmailView(View):
     # 激活邮箱
     def get(self, request):
