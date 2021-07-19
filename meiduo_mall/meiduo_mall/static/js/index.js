@@ -12,6 +12,11 @@ let vm = new Vue({
         carts: [],
     },
     methods: {
+
+//        mounted(){
+//            this.username = getCookie('username')
+//        },
+
         // 获取简单购物车数据
         get_carts(){
             let url = '/carts/simple/';

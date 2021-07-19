@@ -1,4 +1,4 @@
-import re
+import re, json, logging
 
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -7,11 +7,91 @@ from django import http
 from django_redis import get_redis_connection
 
 from users.models import User
+from users.utils import generate_verify_email_url, check_verify_email_token
 from meiduo_mall.utils.response_code import RETCODE
+from meiduo_mall.utils.views import LoginRequiredJsonMixin
+from celery_tasks.email.tasks import send_verify_email
 from django.db import DatabaseError
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 # Create your views here.
 
+
+logger = logging.getLogger('django')
+
+
+class VerifyEmailView(View):
+    # 激活邮箱
+    def get(self, request):
+        # 接收参数
+        token = request.GET.get('token')
+        # 校验参数
+        if not token:
+            return http.HttpResponseForbidden('缺少token')
+        # 从token提取用户信息
+        user = check_verify_email_token(token)
+        if not user:
+            return http.HttpResponseBadRequest('无效token')
+        # 响应结果
+        try:
+            user.email_active = True
+            user.save()
+        except Exception as e:
+            logger.error(e)
+            return http.HttpResponseServerError('激活邮箱失败')
+        return redirect(reverse('users:info'))
+
+
+class EmailView(LoginRequiredJsonMixin, View):
+    # 添加邮箱
+    def put(self, request):
+        # 接收参数
+        json_str = request.body.decode()
+        json_dict = json.loads(json_str)
+        email = json_dict.get('email')
+        # 校验参数
+        if not email:
+            return http.HttpResponseForbidden('缺少email参数')
+        if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$', email):
+            return http.HttpResponseForbidden('参数email有误')
+        # 将用户传入的邮箱保存至数据库
+        try:
+            request.user.email = email
+            request.user.save()
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code': RETCODE.DBERR, 'errmsg': '添加邮箱失败'})
+        # 异步发送验证邮件
+        verify_url = generate_verify_email_url(request.user)
+        send_verify_email.delay(email, verify_url)
+        # 响应结果
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '添加邮箱成功'})
+
+class UserInfoView(LoginRequiredMixin, View):
+    # 用户中心
+    def get(self, request):
+        # login_url = '/login/'
+        # redirect_field_name = 'redirect_to'
+        context = {
+            'username': request.user.username,
+            'mobile': request.user.mobile,
+            'email': request.user.email,
+            'email_active': request.user.email_active
+        }
+        return render(request, 'user_center_info.html', context)
+
+
+class LogoutView(View):
+    # 用户退出
+    def get(self, request):
+        # 清除状态保持信息
+        logout(request)
+        # 重定向到首页
+        response = redirect(reverse('contents:index'))
+        # 删除cookie
+        response.delete_cookie('username')
+        # 响应结果
+        return response
 
 class LoginView(View):
 
@@ -46,9 +126,16 @@ class LoginView(View):
         else:
             # 记住登陆： 状态默认保持周期为两周
             request.session.set_expiry(None)
+        # 处理重定向
+        next = request.GET.get('next')
+        if next:
+            response = redirect(next)
+        else:
+            response = redirect(reverse('contents:index'))
+        # response = redirect(reverse('contents:index'))
+        response.set_cookie('username', user.username, max_age=3600*24*15)
         # 响应结果
-        return redirect(reverse('contents:index'))
-        pass
+        return response
 
 
 class MobileCountView(View):
@@ -114,4 +201,7 @@ class RegisterView(View):
         login(request, user)
 
         # return http.HttpResponse('注册成功')
-        return redirect(reverse('contents:index'))
+        response = redirect(reverse('contents:index'))
+        response.set_cookie('username', user.username, max_age=3600 * 24 * 15)
+        # 响应结果
+        return response

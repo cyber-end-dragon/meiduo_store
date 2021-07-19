@@ -233,4 +233,22 @@ LOGGING = {
     }
 }
 
+# 自定义用户模型类
 AUTH_USER_MODEL = 'users.User'
+
+# 自定义用户认证后端
+AUTHENTICATION_BACKENDS = ['users.utils.UsernameMobileBackend']
+
+# 指定用户未登录重定向页面
+LOGIN_URL = '/login/'
+
+# 邮件参数
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.qq.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = '2035938313@qq.com'
+EMAIL_HOST_PASSWORD = 'qbzgwdlzxhevdaeh'
+EMAIL_FROM = 'cyber<2035938313@qq.com>'
+
+# 邮箱验证链接
+EMAIL_VERIFY_URL = 'http://127.0.0.1:8000/emails/verification/'
