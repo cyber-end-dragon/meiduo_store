@@ -20,4 +20,12 @@ urlpatterns = [
     url(r'^emails/verification/$', views.VerifyEmailView.as_view()),
     # 用户地址
     url(r'^addresses/$', views.AddressView.as_view(), name='address'),
+    # 新增地址
+    url(r'^addresses/create/$', views.AddressCreateView.as_view()),
+    # 更新地址
+    url(r'^addresses/(?P<address_id>\d+)/$', views.UpdataDestoryAddressView.as_view()),
+    # 修改默认地址
+    url(r'^addresses/(?P<address_id>\d+)/default/$', views.DefaultAddressView.as_view()),
+    # 修改地址标题
+    url(r'^addresses/(?P<address_id>\d+)/title/$', views.UpdataTitleAddressView.as_view()),
 ]
