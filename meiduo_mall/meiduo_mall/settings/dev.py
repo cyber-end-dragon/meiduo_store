@@ -40,10 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users', # 用户模块
-    'contents', # 首页广告
-    'verifications', # 验证码
-    'areas' # 省市区三级联动
+    'users',  # 用户模块
+    'contents',  # 首页广告
+    'verifications',  # 验证码
+    'areas',  # 省市区三级联动
+    'goods',  # 商品
 ]
 
 MIDDLEWARE = [
@@ -253,3 +254,10 @@ EMAIL_FROM = 'cyber<2035938313@qq.com>'
 
 # 邮箱验证链接
 EMAIL_VERIFY_URL = 'http://127.0.0.1:8000/emails/verification/'
+
+# 指定自定义的Django文件存储类
+DEFAULT_FILE_STORAGE = 'meiduo_mall.utils.fastdfs.fdfs_storage.FastDFSStorage'
+
+# FastDFS相关参数
+# FDFS_BASE_URL = 'http://192.168.103.158:8888/'
+FDFS_BASE_URL = 'http://192.168.232.129:8888/'
