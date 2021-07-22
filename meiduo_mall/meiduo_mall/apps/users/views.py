@@ -12,6 +12,8 @@ from users.utils import generate_verify_email_url, check_verify_email_token
 from meiduo_mall.utils.response_code import RETCODE
 from meiduo_mall.utils.views import LoginRequiredJsonMixin
 from celery_tasks.email.tasks import send_verify_email
+from goods.models import SKU
+from carts.utils import merge_cart_cookie_to_redis
 from django.db import DatabaseError
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -19,6 +21,56 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 logger = logging.getLogger('django')
+
+
+class UserBrowseHistory(LoginRequiredJsonMixin, View):
+    # 保存用户商品浏览记录
+    def get(self, request):
+        """获取用户浏览记录"""
+        # 获取Redis存储的sku_id列表信息
+        redis_conn = get_redis_connection('history')
+        sku_ids = redis_conn.lrange('history_%s' % request.user.id, 0, -1)
+
+        # 根据sku_ids列表数据，查询出商品sku信息
+        skus = []
+        for sku_id in sku_ids:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append({
+                'id': sku.id,
+                'name': sku.name,
+                'default_image_url': sku.default_image.url,
+                'price': sku.price
+            })
+
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK', 'skus': skus})
+
+    def post(self, request):
+        # 接收参数
+        json_dict = json.loads(request.body.decode())
+        sku_id = json_dict.get('sku_id')
+
+        # 校验参数
+        try:
+            SKU.objects.get(id=sku_id)
+        except SKU.DoesNotExist:
+            return http.HttpResponseForbidden('sku不存在')
+
+        # 保存用户浏览数据
+        redis_conn = get_redis_connection('history')
+        pl = redis_conn.pipeline()
+        user_id = request.user.id
+
+        # 先去重
+        pl.lrem('history_%s' % user_id, 0, sku_id)
+        # 再存储
+        pl.lpush('history_%s' % user_id, sku_id)
+        # 最后截取
+        pl.ltrim('history_%s' % user_id, 0, 4)
+        # 执行管道
+        pl.execute()
+
+        # 响应结果
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'OK'})
 
 
 class UpdataTitleAddressView(LoginRequiredJsonMixin, View):
@@ -351,6 +403,10 @@ class LoginView(View):
             response = redirect(reverse('contents:index'))
         # response = redirect(reverse('contents:index'))
         response.set_cookie('username', user.username, max_age=3600*24*15)
+
+        # 合并购物车
+        response = merge_cart_cookie_to_redis(request=request, user=user, response=response)
+
         # 响应结果
         return response
 

@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^', include('verifications.urls')),
     url(r'^', include('areas.urls')),
     url(r'^', include('goods.urls', namespace='goods')),
+    url(r'^', include('carts.urls', namespace='carts'))
 ]

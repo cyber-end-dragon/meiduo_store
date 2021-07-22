@@ -20,8 +20,9 @@ let vm = new Vue({
         // 是否在设置邮箱
         this.set_email = (this.email=='') ? true : false;
 
+        this.browse_histories();
         // 请求浏览历史记录
-        // this.browse_histories();
+
     },
     methods: {
         // 检查email格式
