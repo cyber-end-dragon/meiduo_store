@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^', include('verifications.urls')),
     url(r'^', include('areas.urls')),
     url(r'^', include('goods.urls', namespace='goods')),
-    url(r'^', include('carts.urls', namespace='carts'))
+    url(r'^', include('carts.urls', namespace='carts')),
+    url(r'^', include('orders.urls', namespace='orders')),
 ]
