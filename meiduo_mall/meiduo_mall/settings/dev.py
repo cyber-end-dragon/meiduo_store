@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django_crontab', # 定时任务
     'haystack', # 全文检索
 
     'users',  # 用户模块
@@ -293,3 +294,11 @@ HAYSTACK_CONNECTIONS = {
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 # 设置haystack每页数量
 HAYSTACK_SEARCH_RESULTS_PER_PAGE = 5
+
+# 定时器
+CRONJOBS = [
+    # 每1分钟生成一次首页静态文件
+    ('*/1 * * * *', 'contents.crons.generate_static_index_html', '>> ' + os.path.join(os.path.dirname(BASE_DIR), 'logs/crontab.log'))
+]
+# 设置定时器中文
+CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
