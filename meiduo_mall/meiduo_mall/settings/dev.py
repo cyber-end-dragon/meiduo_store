@@ -127,6 +127,14 @@ DATABASES = {
         'USER': 'cyber',
         'PASSWORD': '12345678',
         'NAME': 'meiduo',
+    },
+    'slave': { # 读（从机）
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': 'localhost',
+        'PORT': 8306,
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'NAME': 'meiduo'
     }
 }
 
@@ -302,3 +310,6 @@ CRONJOBS = [
 ]
 # 设置定时器中文
 CRONTAB_COMMAND_PREFIX = 'LANG_ALL=zh_cn.UTF-8'
+
+# mysql主从服务器,读写分离
+DATABASE_ROUTERS = ['meiduo_mall.utils.db_router.MasterSlaveDBRouter']
